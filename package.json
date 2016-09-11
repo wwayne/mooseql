@@ -39,7 +39,9 @@
     "graphql": "^0.7.0",
     "mongoose": "^4.6.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "pluralize": "^3.0.0"
+  },
   "devDependencies": {
     "ava": "^0.16.0",
     "babel-cli": "^6.14.0",

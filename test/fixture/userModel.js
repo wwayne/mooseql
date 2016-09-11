@@ -16,6 +16,13 @@ import { schoolType } from './schoolModel'
 
 /* Mongoose User model */
 const userSchema = new Schema({
+  name: {
+    first: String,
+    last: {
+      fst: String,
+      snd: Number
+    }
+  },
   userName: String,
   age: Number,
   isBot: Boolean,
@@ -34,6 +41,23 @@ export const userType = new GraphQLObjectType({
   name: 'User',
   fields: () => ({
     id: { type: GraphQLID },
+    name: {
+      type: new GraphQLObjectType({
+        name: 'Username',
+        fields: () => ({
+          first: { type: GraphQLString },
+          last: {
+            type: new GraphQLObjectType({
+              name: 'Usernamelast',
+              fields: () => ({
+                fst: { type: GraphQLString },
+                snd: { type: GraphQLFloat }
+              })
+            })
+          }
+        })
+      })
+    },
     userName: { type: GraphQLString },
     age: { type: GraphQLFloat },
     isBot: { type: GraphQLBoolean },

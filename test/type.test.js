@@ -20,6 +20,13 @@ test.before(async t => {
     students: 100
   })
   user = new UserModel({
+    name: {
+      first: 'wang',
+      last: {
+        fst: 'zi',
+        snd: 21
+      }
+    },
     userName: 'wayne',
     age: 26,
     isBot: false,
@@ -37,27 +44,28 @@ test.before(async t => {
 test.after(async t => {
   // Drop db use mongoose
   // @see http://stackoverflow.com/questions/10081452/drop-database-with-mongoose
-  await SchoolModel.remove({})
+  await SchoolModel.findByIdAndRemove(school.id)
   t.pass()
 })
 
 test('Mongoose model should be converted to graphql type correctly', t => {
-  const convertedUserFileds = typeMap['User']._typeConfig.fields()
-  const userFileds = userType._typeConfig.fields()
+  const convertedUserFields = typeMap['User']._typeConfig.fields()
+  const userFields = userType._typeConfig.fields()
 
   t.is(Object.keys(typeMap).length, 2)
   t.is(typeMap['User'].name, userType.name)
-  t.deepEqual(convertedUserFileds.id, userFileds.id)
-  t.deepEqual(convertedUserFileds.userName, userFileds.userName)
-  t.deepEqual(convertedUserFileds.age, userFileds.age)
-  t.deepEqual(convertedUserFileds.isBot, userFileds.isBot)
-  t.deepEqual(convertedUserFileds.birth, userFileds.birth)
-  t.deepEqual(convertedUserFileds.binary, userFileds.binary)
-  t.deepEqual(convertedUserFileds.info, userFileds.info)
-  t.deepEqual(convertedUserFileds.hobbies, userFileds.hobbies)
-  t.deepEqual(convertedUserFileds.currentSchool.type.name, userFileds.currentSchool.type.name)
-  t.true(convertedUserFileds.education.type instanceof GraphQLList)
-  t.deepEqual(convertedUserFileds.education.type.ofType.name, userFileds.education.type.ofType.name)
+  t.deepEqual(convertedUserFields.id, userFields.id)
+  t.deepEqual(convertedUserFields.userName, userFields.userName)
+  t.deepEqual(convertedUserFields.name.type._typeConfig.fields().first, userFields.name.type._typeConfig.fields().first)
+  t.deepEqual(convertedUserFields.age, userFields.age)
+  t.deepEqual(convertedUserFields.isBot, userFields.isBot)
+  t.deepEqual(convertedUserFields.birth, userFields.birth)
+  t.deepEqual(convertedUserFields.binary, userFields.binary)
+  t.deepEqual(convertedUserFields.info, userFields.info)
+  t.deepEqual(convertedUserFields.hobbies, userFields.hobbies)
+  t.deepEqual(convertedUserFields.currentSchool.type.name, userFields.currentSchool.type.name)
+  t.true(convertedUserFields.education.type instanceof GraphQLList)
+  t.deepEqual(convertedUserFields.education.type.ofType.name, userFields.education.type.ofType.name)
 })
 
 test('Mongoose model should be accessable to query after converting', async t => {
@@ -75,6 +83,13 @@ test('Mongoose model should be accessable to query after converting', async t =>
   const queryRes = await graphql(schema, `{
     user {
       id,
+      name {
+        first,
+        last {
+          fst,
+          snd
+        }
+      }
       userName,
       age,
       isBot,
@@ -92,9 +107,11 @@ test('Mongoose model should be accessable to query after converting', async t =>
     }
   }`)
   const userRes = queryRes.data.user
-
   t.is(userRes.id, user.id)
   t.is(userRes.userName, user.userName)
+  t.is(userRes.name.first, user.name.first)
+  t.is(userRes.name.last.fst, user.name.last.fst)
+  t.is(userRes.name.last.snd, user.name.last.snd)
   t.is(userRes.age, user.age)
   t.is(userRes.isBot, user.isBot)
   t.is(userRes.birth, user.birth)

@@ -4,7 +4,8 @@ import {
   GraphQLString,
   GraphQLFloat,
   GraphQLBoolean,
-  GraphQLList
+  GraphQLList,
+  GraphQLScalarType
 } from 'graphql/type'
 import {
   GraphQLBuffer,
@@ -68,19 +69,39 @@ export function modelsToTypes (models) {
 const toType = (model) => {
   const exceptPath = ['_id', '__v']
   const paths = model.schema.paths
-  const fields = Object.keys(paths)
+  let fields = Object.keys(paths)
     .filter(path => exceptPath.indexOf(path) === -1)
-    .reduce((fields, path) => {
+    .map(path => {
       const attr = paths[path]
-      fields[path] = { type: pathToType(attr) }
+      const field = { type: pathToType(attr) }
       // Find out ref on mongoose model's path, use subPath's ref if path is an Array
       if (attr.options.ref || (attr.instance === 'Array' && attr.caster.options.ref)) {
-        fields[path]['ref'] = attr.options.ref || attr.caster.options.ref
+        field.ref = attr.options.ref || attr.caster.options.ref
       }
-      return fields
-    }, {
-      id: { type: GraphQLID }
+      return { [path]: field }
     })
+    .reduce((fields, path) => {
+      // make up object tpe, e.g { name: { first: {type: GraphQLString...}, last: {type: GraphQLString...} } }
+      const pathKey = Object.keys(path)[0]
+      const pathKeySplit = pathKey.split('.')
+      const pathKeyLength = pathKeySplit.length
+      if (pathKeyLength.length === 1) return Object.assign(fields, path)
+      pathKeySplit.reduce((fieldPostion, depth, index) => {
+        if (index === pathKeyLength - 1) {
+          fieldPostion[depth] = path[pathKey]
+          return
+        }
+        fieldPostion[depth] = fieldPostion[depth] || {}
+        return fieldPostion[depth]
+      }, fields)
+      return fields
+    }, { id: { type: GraphQLID } })
+
+  // Deal with object attribute in mongoose model
+  // e.g. {name: {first: String, last: Strinf}} -> {name: GraphQLType{fields: {first: GraphQLString, two: GraphQLString}}}
+  fields = Object.entries(fields).map(([key, attr]) => {
+    return { [key]: convertObject(attr, `${model.modelName}${key}`) }
+  }).reduce((fields, path) => (Object.assign(fields, path)), {})
 
   return new GraphQLObjectType({
     name: model.modelName,
@@ -112,5 +133,23 @@ const pathToType = (path) => {
       return new GraphQLList(subType)
     default:
       return GraphQLMixed
+  }
+}
+
+// Convert model's object attribute
+const convertObject = (attr, parentName) => {
+  if (attr.type && (attr.type instanceof GraphQLScalarType || attr.type instanceof GraphQLList)) return attr
+  const fields = Object.entries(attr).map(([key, vakue]) => {
+    return { [key]: convertObject(attr[key], `${parentName}${key}`) }
+  }).reduce((fields, path) => {
+    // console.log(path)
+    return Object.assign(fields, path)
+  }, {})
+  // console.log(fields)
+  return {
+    type: new GraphQLObjectType({
+      name: `${parentName}`,
+      fields: () => (fields)
+    })
   }
 }

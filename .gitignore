@@ -1,3 +1,7 @@
+!.gitignore
+!.npmignore
+!.babelrc
+
 node_modules/
 *.DS_Store*
 *.log
