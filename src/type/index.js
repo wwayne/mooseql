@@ -78,6 +78,9 @@ const toType = (model) => {
       if (attr.options.ref || (attr.instance === 'Array' && attr.caster.options.ref)) {
         field.ref = attr.options.ref || attr.caster.options.ref
       }
+      // Mark required path
+      const required = attr.options.required
+      if (Array.isArray(required) && required[0] || required) field.required = true
       return { [path]: field }
     })
     .reduce((fields, path) => {

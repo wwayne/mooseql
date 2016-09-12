@@ -23,13 +23,13 @@ const userSchema = new Schema({
       snd: Number
     }
   },
-  userName: String,
+  userName: { type: String, required: [true, 'userName is required']},
   age: Number,
   isBot: Boolean,
   birth: { type: Date, default: Date.now },
   binary: Buffer,
   info: Schema.Types.Mixed,
-  hobbies: [{ type: String }],
+  hobbies: { type: [String], required: 'hobbies should have one at least' },
   currentSchool: { type: Schema.Types.ObjectId, ref: 'School' },
   education: [{ type: Schema.Types.ObjectId, ref: 'School' }]
 })
@@ -58,14 +58,14 @@ export const userType = new GraphQLObjectType({
         })
       })
     },
-    userName: { type: GraphQLString },
+    userName: { type: GraphQLString, required: true },
     age: { type: GraphQLFloat },
     isBot: { type: GraphQLBoolean },
     birth: { type: GraphQLDate },
     binary: { type: GraphQLBuffer },
     info: { type: GraphQLMixed },
-    hobbies: { type: new GraphQLList(GraphQLString) },
-    currentSchool: { type: schoolType },
-    education: { type: new GraphQLList(schoolType) }
+    hobbies: { type: new GraphQLList(GraphQLString), required: true },
+    currentSchool: { type: schoolType, resolve: () => {} },
+    education: { type: new GraphQLList(schoolType), resolve: () => {} }
   })
 })
