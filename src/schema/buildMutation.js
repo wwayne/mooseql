@@ -1,4 +1,5 @@
-
+import buildArgs from './buildArgs'
+import { filterPluralArgs, toMongooseArgs } from '../utils'
 
 /**
  * Build mutation for single model
@@ -10,11 +11,21 @@
  */
 export default function (model, type) {
   const modelName = model.modelName
+  const defaultArgs = buildArgs(type)
   return {
-    [`create${modelName}`]: ,
-    [`update${modelName}`]: {},
-    [`remove${modelName}`]: {}
+    [`create${modelName}`]: buildCreate(model, type, defaultArgs),
+    // [`update${modelName}`]: {},
+    // [`remove${modelName}`]: {}
   }
 }
 
-
+const buildCreate = (model, type, defaultArgs) => {
+  return {
+    type,
+    args: filterPluralArgs(defaultArgs),
+    resolve: async (_, args) => {
+      const instance = new model(toMongooseArgs(args))
+      return await instance.save()
+    }
+  }
+}

@@ -8,7 +8,7 @@ import {
 
 /* Mongoose School model */
 const schoolSchema = new Schema({
-  name: String,
+  name: { type: String, required: 'name is required' },
   position: String,
   students: Number
 })
@@ -20,7 +20,7 @@ export const schoolType = new GraphQLObjectType({
   name: 'School',
   fields: () => ({
     id: { type: GraphQLID },
-    name: { type: GraphQLString },
+    name: { type: GraphQLString, required: true },
     position: { type: GraphQLString },
     students: { type: GraphQLFloat }
   })
