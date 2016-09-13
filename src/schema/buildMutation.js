@@ -57,7 +57,7 @@ const buildUpdate = (Model, type, defaultArgs) => {
 
 const buildDelete = (Model, type, defaultArgs) => {
   const returnType = new GraphQLObjectType({
-    name: 'deleteMutationReturn',
+    name: `${Model.modelName}deleteMutationReturn`,
     fields: () => ({
       success: { type: GraphQLBoolean },
       msg: { type: GraphQLString }

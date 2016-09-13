@@ -13,17 +13,24 @@ import {
   GraphQLMixed
 } from './customType'
 
+let _typeMap = {}
 /**
  * Convert bundch of mongoose model to graphql types
+ * build this as singleton so that it won't create graphQLType twice
+ *
  * @params
  *  - models {Array} list of mongoose models
  * @return
  *  - typeMap {Object} key: modelName, value: type
  */
 export function modelsToTypes (models) {
-  let typeMap = models.reduce((map, model) => {
-    return Object.assign(map, { [model.modelName]: toType(model) })
-  }, {})
+  let typeMap = models.filter(model => {
+      if (_typeMap[model.modelName]) return false
+      return true
+    }).reduce((map, model) => {
+      return Object.assign(map, { [model.modelName]: toType(model) })
+    }, {})
+  _typeMap = Object.assign(_typeMap, typeMap)
 
   // Deal with ref after all types are defined
   Object.entries(typeMap).forEach(([modelName, type]) => {
@@ -32,12 +39,12 @@ export function modelsToTypes (models) {
       .map(([path, pathValue]) => {
         if (pathValue.ref) {
           const ref = pathValue.ref
-          if (!typeMap[ref]) throw TypeError(`${ref} is not a model`)
+          if (!_typeMap[ref]) throw TypeError(`${ref} is not a model`)
           const model = models.find(m => m.modelName === ref)
-
+          const refModelType = _typeMap[ref]
           if (pathValue.type instanceof GraphQLList) {
             return {[path]: {
-              type: new GraphQLList(typeMap[ref]),
+              type: new GraphQLList(refModelType),
               resolve: async (instance) => {
                 // TODO: args filter
                 return await model.find({ _id: { $in: instance[path] } })
@@ -45,7 +52,7 @@ export function modelsToTypes (models) {
             }}
           } else {
             return {[path]: {
-              type: typeMap[ref],
+              type: refModelType,
               resolve: async (instance) => {
                 return await model.findById(instance[path])
               }
@@ -56,13 +63,11 @@ export function modelsToTypes (models) {
       })
       .reduce((typeField, path) => (Object.assign(typeField, path)), {})
 
-    typeMap[modelName] = new GraphQLObjectType({
-      name: type.name,
-      fields: () => (newTypeFileds)
-    })
+    typeMap[modelName]._typeConfig.fields = () => (newTypeFileds)
   })
 
-  return typeMap
+  _typeMap = Object.assign(_typeMap, typeMap)
+  return _typeMap
 }
 
 /* Convert a mongoose model to corresponding type */
@@ -105,7 +110,6 @@ const toType = (model) => {
   fields = Object.entries(fields).map(([key, attr]) => {
     return { [key]: convertObject(attr, `${model.modelName}${key}`) }
   }).reduce((fields, path) => (Object.assign(fields, path)), {})
-
   return new GraphQLObjectType({
     name: model.modelName,
     fields: () => (fields)

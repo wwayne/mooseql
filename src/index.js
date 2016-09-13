@@ -9,15 +9,14 @@ export default function (models, customFields, opt) {
   const {query, mutation} = buildSchema(models, typeMap)
   const customQuery = customFields && customFields.query
   const customMutation = customFields && customFields.mutation
-
   return new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
-      fields: Object.assign(query, customQuery)
+      fields: Object.assign({}, query, customQuery)
     }),
     mutation: new GraphQLObjectType({
       name: 'Mutation',
-      fields: Object.assign(mutation, customMutation)
+      fields: Object.assign({}, mutation, customMutation)
     })
   })
 }

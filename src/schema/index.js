@@ -18,8 +18,9 @@ export function buildSchema (models, typeMap) {
       mutation: buildMutation(model, type)
     }
   }).reduce((fields, modelField) => {
-    fields.query = Object.assign(fields.query, modelField.query)
-    fields.mutation = Object.assign(fields.mutation, modelField.mutation)
+    fields.query = Object.assign({}, fields.query, modelField.query)
+    fields.mutation = Object.assign({}, fields.mutation, modelField.mutation)
+    return fields
   }, { query: {}, mutation: {} })
 
   return {
