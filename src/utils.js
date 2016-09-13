@@ -2,18 +2,25 @@ import {GraphQLNonNull} from 'graphql/type'
 import pluralize from 'pluralize'
 
 /**
- * Filter plural arguments
+ * Filter arguments when doing CRUD
+ * @params
+ *  - defaultArgs {Object} the result of buildArgs
+ *  - opt {Object {filter: {Bool}} options: id, plural, required, idRequired
  */
-export function filterPluralArgs (defaultArgs) {
+export function filterArgs (defaultArgs, opt) {
+  opt = opt || {}
+  const packValueToNonNull = (value) => (Object.assign({}, value, {type: new GraphQLNonNull(value.type)}) )
   return Object.entries(defaultArgs)
     .filter(([arg, value]) => {
-      if (arg === 'id' || arg === 'ids') return false
-      if (!value.onlyPlural && pluralize.plural(arg) === arg) return false
+      if (opt.id && (arg === 'id' || arg === 'ids')) return false
+      if (opt.plural && !value.onlyPlural && pluralize.plural(arg) === arg) return false
       return true
     })
     .map(([arg, value]) => {
-      if (value.required) value = Object.assign(value, {type: new GraphQLNonNull(value.type)})
-      return [arg, value]
+      let newValue = Object.assign({}, value)
+      if ((arg === 'id' || arg === 'ids') && opt.idRequired) newValue = packValueToNonNull(newValue)
+      if (!opt.required && newValue.required) newValue = packValueToNonNull(newValue)
+      return [arg, newValue]
     })
     .reduce((args, [arg, value]) => {
       return Object.assign(args, {[arg]: value})

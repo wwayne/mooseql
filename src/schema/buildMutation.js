@@ -1,5 +1,5 @@
 import buildArgs from './buildArgs'
-import { filterPluralArgs, toMongooseArgs } from '../utils'
+import { filterArgs, toMongooseArgs } from '../utils'
 
 /**
  * Build mutation for single model
@@ -14,7 +14,7 @@ export default function (model, type) {
   const defaultArgs = buildArgs(type)
   return {
     [`create${modelName}`]: buildCreate(model, type, defaultArgs),
-    // [`update${modelName}`]: {},
+    [`update${modelName}`]: buildUpdate(model, type, defaultArgs),
     // [`remove${modelName}`]: {}
   }
 }
@@ -22,10 +22,30 @@ export default function (model, type) {
 const buildCreate = (model, type, defaultArgs) => {
   return {
     type,
-    args: filterPluralArgs(defaultArgs),
+    args: filterArgs(defaultArgs, { id: true, plural: true }),
     resolve: async (_, args) => {
       const instance = new model(toMongooseArgs(args))
       return await instance.save()
+    }
+  }
+}
+
+const buildUpdate = (model, type, defaultArgs) => {
+  return {
+    type,
+    args: filterArgs(defaultArgs, { plural: true, required: true, idRequired: true }),
+    resolve: async (_, args) => {
+      const updateData = Object.entries(args)
+        .filter(([key, _]) => {
+          if (key === 'id' || key === 'ids') return false
+          return true
+        })
+        .map(([key, value]) => {
+          return [key.replace('_', '.'), value]
+        })
+        .reduce((args, [key, value]) => (Object.assign(args, {[key]: value})), {})
+      await model.update({ _id: args.id }, { $set: updateData })
+      return await model.findById(args.id)
     }
   }
 }

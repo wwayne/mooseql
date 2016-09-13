@@ -8,6 +8,7 @@ import { modelsToTypes } from '../src/type'
 import buildMutation from '../src/schema/buildMutation'
 
 let school
+let school2
 let user
 let userSchema
 test.before(async t => {
@@ -30,26 +31,32 @@ test.before(async t => {
     position: 'sh',
     students: 100
   })
-  // user = new UserModel({
-  //   userName: 'wayne',
-  //   name: { first: 'wang' },
-  //   age: 26,
-  //   isBot: false,
-  //   birth: new Date(1990, 7, 21),
-  //   binary: new Buffer('wzx'),
-  //   info: { any: { thing: 'foo' } },
-  //   hobbies: ['basketball', 'travelling'],
-  //   currentSchool: school.id,
-  //   education: [school.id]
-  // })
-  // await user.save()
+  school2 = new SchoolModel({
+    name: 'highschool',
+    position: 'zh',
+    students: 10
+  })
+  user = new UserModel({
+    userName: 'wayne',
+    name: { first: 'wang' },
+    age: 26,
+    isBot: false,
+    birth: new Date(1990, 7, 21),
+    binary: new Buffer('wzx'),
+    info: { any: { thing: 'foo' } },
+    hobbies: ['basketball', 'travelling'],
+    currentSchool: school.id,
+    education: [school.id]
+  })
+  await user.save()
   await school.save()
+  await school2.save()
   t.pass()
 })
 
 test.after(async t => {
-  // await UserModel.findByIdAndRemove(user.id)
-  await SchoolModel.findByIdAndRemove(school.id)
+  await UserModel.findByIdAndRemove(user.id)
+  await SchoolModel.find({ _id: {$in: [school.id, school2.id]} }).remove()
   t.pass()
 })
 
@@ -88,16 +95,59 @@ test('should create with any mongoose path when giving valid type', async t => {
       }
     }`
   )
-  const user = queryRes.data.user
-  t.is(user.userName, 'wzx')
-  t.is(user.name.first, 'wang')
-  t.is(user.age, 26)
-  t.false(user.isBot)
-  t.deepEqual(user.birth, new Date(1990, 7, 21))
-  t.deepEqual(user.binary, new Buffer('wzx'))
-  t.deepEqual(user.hobbies, ['coding'])
-  t.is(user.currentSchool.id, school.id)
-  t.is(user.currentSchool.name, school.name)
-  t.is(user.education[0].id, school.id)
-  UserModel.findByIdAndRemove(user.id)
+  const userData = queryRes.data.user
+  t.is(userData.userName, 'wzx')
+  t.is(userData.name.first, 'wang')
+  t.is(userData.age, 26)
+  t.false(userData.isBot)
+  t.deepEqual(userData.birth, new Date(1990, 7, 21))
+  t.deepEqual(userData.binary, new Buffer('wzx'))
+  t.deepEqual(userData.hobbies, ['coding'])
+  t.is(userData.currentSchool.id, school.id)
+  t.is(userData.currentSchool.name, school.name)
+  t.is(userData.education[0].id, school.id)
+  await UserModel.findByIdAndRemove(userData.id)
 })
+
+test('should update a single document attribute when giving valid params', async t => {
+  const queryRes = await graphql(
+    userSchema,
+    `mutation update {
+      user: updateUser (
+        id: "${user.id}",
+        userName: "wwayne",
+        name_first: "firstModified",
+        hobbies: ["no", "no1"],
+        currentSchool: "${school2.id}"
+      ) {
+        id,
+        userName,
+        name {
+          first
+        },
+        age,
+        isBot,
+        birth,
+        binary
+        hobbies,
+        currentSchool {
+          id,
+          name
+        },
+        education {
+          id
+        }
+      }
+    }`
+  )
+  const userData = queryRes.data.user
+  t.is(userData.userName, 'wwayne')
+  t.is(userData.name.first, 'firstModified')
+  t.deepEqual(userData.hobbies, ["no", "no1"])
+  t.is(userData.currentSchool.id, school2.id)
+  t.is(userData.currentSchool.name, school2.name)
+})
+
+
+
+

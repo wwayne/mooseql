@@ -67,7 +67,7 @@ const nameToType = (typeName, field) => {
     case 'Date': return GraphQLDate
     case 'Mixed': return {}
     default:
-      if (hasResolve) return GraphQLID // other model type
+      if (hasResolve) return GraphQLID // other models, use ID as reference
       return null // Object attribute in mongoose model
   }
 }
