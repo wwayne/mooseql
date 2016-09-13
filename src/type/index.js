@@ -6,7 +6,7 @@ import {
   GraphQLBoolean,
   GraphQLList,
   GraphQLScalarType
-} from 'graphql/type'
+} from 'graphql'
 import {
   GraphQLBuffer,
   GraphQLDate,

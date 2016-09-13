@@ -23,7 +23,7 @@ const userSchema = new Schema({
       snd: Number
     }
   },
-  userName: { type: String, required: [true, 'userName is required']},
+  userName: { type: String, required: [true, 'userName is required'] },
   age: Number,
   isBot: Boolean,
   birth: { type: Date, default: Date.now },

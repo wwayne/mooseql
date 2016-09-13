@@ -4,7 +4,7 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
   GraphQLList
-} from 'graphql/type'
+} from 'graphql'
 import {
   GraphQLBuffer,
   GraphQLDate

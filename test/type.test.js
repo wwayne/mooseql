@@ -38,14 +38,10 @@ test.before(async t => {
     education: [school.id]
   })
   await school.save()
-  t.pass()
 })
 
 test.after(async t => {
-  // Drop db use mongoose
-  // @see http://stackoverflow.com/questions/10081452/drop-database-with-mongoose
   await SchoolModel.findByIdAndRemove(school.id)
-  t.pass()
 })
 
 test('Mongoose model should be converted to graphql type correctly', t => {

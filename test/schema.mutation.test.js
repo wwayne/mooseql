@@ -51,13 +51,11 @@ test.before(async t => {
   await user.save()
   await school.save()
   await school2.save()
-  t.pass()
 })
 
 test.after(async t => {
   await UserModel.findByIdAndRemove(user.id)
   await SchoolModel.find({ _id: {$in: [school.id, school2.id]} }).remove()
-  t.pass()
 })
 
 test('should create with any mongoose path when giving valid type', async t => {
@@ -109,7 +107,7 @@ test('should create with any mongoose path when giving valid type', async t => {
   await UserModel.findByIdAndRemove(userData.id)
 })
 
-test('should update a single document attribute when giving valid params', async t => {
+test('should update a single document attribute when giving valid id', async t => {
   const queryRes = await graphql(
     userSchema,
     `mutation update {
@@ -143,11 +141,44 @@ test('should update a single document attribute when giving valid params', async
   const userData = queryRes.data.user
   t.is(userData.userName, 'wwayne')
   t.is(userData.name.first, 'firstModified')
-  t.deepEqual(userData.hobbies, ["no", "no1"])
+  t.deepEqual(userData.hobbies, ['no', 'no1'])
   t.is(userData.currentSchool.id, school2.id)
   t.is(userData.currentSchool.name, school2.name)
 })
 
+test('should delete a document when giving valid id', async t => {
+  const user = new UserModel({
+    userName: 'wayne',
+    hobbies: ['basketball', 'travelling']
+  })
+  const queryRes = await graphql(
+    userSchema,
+    `mutation update {
+      deleteUser (
+        id: "${user.id}"
+      ) {
+        success,
+        msg
+      }
+    }`
+  )
+  t.true(queryRes.data.deleteUser.success)
+  t.is(queryRes.data.deleteUser.msg, null)
+})
 
-
+test('should response with success false when giving invalid id', async t => {
+  const queryRes = await graphql(
+    userSchema,
+    `mutation update {
+      deleteUser (
+        id: "57d79c1150e3ffd8adee7fxz"
+      ) {
+        success,
+        msg
+      }
+    }`
+  )
+  t.false(queryRes.data.deleteUser.success)
+  t.not(queryRes.data.deleteUser.msg, null)
+})
 

@@ -1,3 +1,8 @@
+import {
+  GraphQLObjectType,
+  GraphQLBoolean,
+  GraphQLString
+} from 'graphql'
 import buildArgs from './buildArgs'
 import { filterArgs, toMongooseArgs } from '../utils'
 
@@ -15,22 +20,22 @@ export default function (model, type) {
   return {
     [`create${modelName}`]: buildCreate(model, type, defaultArgs),
     [`update${modelName}`]: buildUpdate(model, type, defaultArgs),
-    // [`remove${modelName}`]: {}
+    [`delete${modelName}`]: buildDelete(model, type, defaultArgs)
   }
 }
 
-const buildCreate = (model, type, defaultArgs) => {
+const buildCreate = (Model, type, defaultArgs) => {
   return {
     type,
     args: filterArgs(defaultArgs, { id: true, plural: true }),
     resolve: async (_, args) => {
-      const instance = new model(toMongooseArgs(args))
+      const instance = new Model(toMongooseArgs(args))
       return await instance.save()
     }
   }
 }
 
-const buildUpdate = (model, type, defaultArgs) => {
+const buildUpdate = (Model, type, defaultArgs) => {
   return {
     type,
     args: filterArgs(defaultArgs, { plural: true, required: true, idRequired: true }),
@@ -44,8 +49,31 @@ const buildUpdate = (model, type, defaultArgs) => {
           return [key.replace('_', '.'), value]
         })
         .reduce((args, [key, value]) => (Object.assign(args, {[key]: value})), {})
-      await model.update({ _id: args.id }, { $set: updateData })
-      return await model.findById(args.id)
+      await Model.update({ _id: args.id }, { $set: updateData })
+      return await Model.findById(args.id)
+    }
+  }
+}
+
+const buildDelete = (Model, type, defaultArgs) => {
+  const returnType = new GraphQLObjectType({
+    name: 'deleteMutationReturn',
+    fields: () => ({
+      success: { type: GraphQLBoolean },
+      msg: { type: GraphQLString }
+    })
+  })
+  return {
+    type: returnType,
+    args: filterArgs(defaultArgs, { plural: true, idRequired: true, onlyId: true }),
+    resolve: async (_, args) => {
+      let res = { success: true, msg: null }
+      try {
+        await Model.findById(args.id).remove()
+      } catch (err) {
+        res = { success: false, msg: err.message }
+      }
+      return res
     }
   }
 }

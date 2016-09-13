@@ -5,7 +5,6 @@ import buildArgs from '../src/schema/buildArgs'
 let args
 test.before(t => {
   args = buildArgs(userType)
-  t.pass()
 })
 
 test('it shold generate singular and plural args when giving a graphql type', t => {

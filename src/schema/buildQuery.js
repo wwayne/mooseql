@@ -1,4 +1,4 @@
-import { GraphQLList } from 'graphql/type'
+import { GraphQLList } from 'graphql'
 import pluralize from 'pluralize'
 import buildArgs from './buildArgs'
 

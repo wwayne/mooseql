@@ -54,13 +54,11 @@ test.before(async t => {
   await user.save()
   await user2.save()
   await school.save()
-  t.pass()
 })
 
 test.after(async t => {
   await UserModel.find({ _id: { $in: [user.id, user2.id] } }).remove()
   await SchoolModel.findByIdAndRemove(school.id)
-  t.pass()
 })
 
 test('should support find by id for each every model', async t => {

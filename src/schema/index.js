@@ -1,4 +1,3 @@
-import { GraphQLSchema, GraphQLObjectType } from 'graphql'
 import buildQuery from './buildQuery'
 import buildMutation from './buildMutation'
 
@@ -23,14 +22,8 @@ export function buildSchema (models, typeMap) {
     fields.mutation = Object.assign(fields.mutation, modelField.mutation)
   }, { query: {}, mutation: {} })
 
-  return new GraphQLSchema({
-    query: new GraphQLObjectType({
-      name: 'RootQuery',
-      fields: query
-    }),
-    mutation: new GraphQLObjectType({
-      name: 'RootMutation',
-      fields: mutation
-    })
-  })
+  return {
+    query,
+    mutation
+  }
 }
