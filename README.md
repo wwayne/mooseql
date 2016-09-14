@@ -47,7 +47,7 @@ app.listen(3000)
 ```js
 - Create a new user
 
-post('/graphql)
+post('/graphql')
  .send({
    query: `mutation create {
      user: createUser(
