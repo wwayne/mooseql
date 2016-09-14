@@ -35,7 +35,7 @@ export default function () {
     app.use('/graphql', graphqlHTTP({
       schema: mySchema,
       graphiql: false
-    }));
+    }))
     app.listen(3000, (err) => {
       if (err) return reject(err)
       resolve(app)

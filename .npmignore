@@ -1,6 +1,13 @@
-node_modules/
+// system file
 *.DS_Store*
 *.log*
 
+// specific files
+coverage/
 src/
 test/
+
+// setting files
+.babelrc
+.travis.yml
+.nyc_output

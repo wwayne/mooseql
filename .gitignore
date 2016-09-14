@@ -1,9 +1,12 @@
 !.gitignore
 !.npmignore
 !.babelrc
+!.travis.yml
 
-node_modules/
 *.DS_Store*
 *.log*
+.nyc_output
 
+node_modules/
+coverage/
 lib/

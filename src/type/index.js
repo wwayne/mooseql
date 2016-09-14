@@ -25,11 +25,11 @@ let _typeMap = {}
  */
 export function modelsToTypes (models) {
   let typeMap = models.filter(model => {
-      if (_typeMap[model.modelName]) return false
-      return true
-    }).reduce((map, model) => {
-      return Object.assign(map, { [model.modelName]: toType(model) })
-    }, {})
+    if (_typeMap[model.modelName]) return false
+    return true
+  }).reduce((map, model) => {
+    return Object.assign(map, { [model.modelName]: toType(model) })
+  }, {})
   _typeMap = Object.assign(_typeMap, typeMap)
 
   // Deal with ref after all types are defined

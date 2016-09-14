@@ -89,5 +89,5 @@ test('should able to create custom query or mutation', async t => {
       t.deepEqual(res.body.data.user.hobbies, ['basketball', 'travelling'])
       t.is(res.body.data.user.age, 10)
     })
-    await UserModel.findByIdAndRemove(userId)
+  await UserModel.findByIdAndRemove(userId)
 })
