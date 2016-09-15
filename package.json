@@ -43,6 +43,7 @@
     "mongoose": "^4.6.0"
   },
   "dependencies": {
+    "babel-runtime": "^6.11.6",
     "pluralize": "^3.0.0"
   },
   "devDependencies": {
