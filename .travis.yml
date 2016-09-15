@@ -10,3 +10,5 @@ services:
   - mongodb
 install:
   - npm install
+script:
+  - make cover

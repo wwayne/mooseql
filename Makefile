@@ -19,4 +19,8 @@ babel:
 	@ echo Babel converting...
 	@$(NODE_BIN)/babel $(SRC) --out-dir $(DIST)
 
-.PHONY: lint test babel cover
+publish: test babel
+	@echo NPM publishing...
+	@npm publish
+
+.PHONY: lint test babel cover publish

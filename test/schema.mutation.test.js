@@ -169,7 +169,7 @@ test('should delete a document when giving valid id', async t => {
 test('should response with success false when giving invalid id', async t => {
   const queryRes = await graphql(
     userSchema,
-    `mutation update {
+    `mutation delete {
       deleteUser (
         id: "57d79c1150e3ffd8adee7fxz"
       ) {
