@@ -18,7 +18,7 @@ cover: lint
 coveralls: cover
 	@cat ./coverage/lcov.info | $(NODE_BIN)/coveralls --verbose
 
-babel:
+babel: test
 	@ echo Babel converting...
 	@$(NODE_BIN)/babel $(SRC) --out-dir $(DIST)
 
