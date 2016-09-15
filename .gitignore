@@ -2,6 +2,7 @@
 !.npmignore
 !.babelrc
 !.travis.yml
+!.coveralls.yml
 
 *.DS_Store*
 *.log*
