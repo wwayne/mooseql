@@ -2,9 +2,7 @@ import { GraphQLSchema, GraphQLObjectType } from 'graphql'
 import { modelsToTypes } from './type'
 import { buildSchema } from './schema'
 
-export const buildTypes = modelsToTypes
-
-export default function (models, customFields, opt) {
+const mooseql = (models, customFields, opt) => {
   const typeMap = modelsToTypes(models)
   const {query, mutation} = buildSchema(models, typeMap)
   const customQuery = customFields && customFields.query
@@ -20,3 +18,7 @@ export default function (models, customFields, opt) {
     })
   })
 }
+
+mooseql.buildTypes = modelsToTypes
+
+module.exports = mooseql
