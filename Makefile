@@ -19,7 +19,9 @@ coveralls: cover
 	@cat ./coverage/lcov.info | $(NODE_BIN)/coveralls --verbose
 
 babel: test
-	@ echo Babel converting...
+	@echo Babel converting...
+	@rm -rf lib/
+	@mkdir -p lib
 	@$(NODE_BIN)/babel $(SRC) --out-dir $(DIST)
 
 publish: test babel
