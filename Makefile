@@ -6,7 +6,7 @@ lint:
 	@echo Linting...
 	@$(NODE_BIN)/standard --verbose | $(NODE_BIN)/snazzy src/
 
-test:
+test: lint
 	@ echo Testing...
 	@$(NODE_BIN)/ava test/*.test.js --timeout=10s
 
@@ -20,7 +20,7 @@ coveralls: cover
 
 babel: test
 	@echo Babel converting...
-	@rm -rf lib/
+	@rm -rf lib
 	@mkdir -p lib
 	@$(NODE_BIN)/babel $(SRC) --out-dir $(DIST)
 
