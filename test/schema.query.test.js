@@ -24,6 +24,7 @@ test.before(async t => {
   })
   school = new SchoolModel({
     name: 'universary',
+    principal: 'wayne',
     position: 'sh',
     students: 100
   })

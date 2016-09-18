@@ -11,11 +11,13 @@ let school
 let school2
 let user
 let userSchema
+let schoolSchema
 test.before(async t => {
   mongoose.connect('mongodb://localhost/test')
 
   const typeMap = modelsToTypes([UserModel, SchoolModel])
   const userMutationField = buildMutation(UserModel, typeMap['User'])
+  const schoolMutationField = buildMutation(SchoolModel, typeMap['School'])
   userSchema = new GraphQLSchema({
     query: new GraphQLObjectType({
       name: 'Query',
@@ -26,13 +28,25 @@ test.before(async t => {
       fields: userMutationField
     })
   })
+  schoolSchema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: { user: { type: typeMap['School'] } }
+    }),
+    mutation: new GraphQLObjectType({
+      name: 'Mutation',
+      fields: schoolMutationField
+    })
+  })
   school = new SchoolModel({
     name: 'universary',
+    principal: 'wayne',
     position: 'sh',
     students: 100
   })
   school2 = new SchoolModel({
     name: 'highschool',
+    principal: 'wayne',
     position: 'zh',
     students: 10
   })
@@ -107,6 +121,55 @@ test('should create with any mongoose path when giving valid type', async t => {
   await UserModel.findByIdAndRemove(userData.id)
 })
 
+test('should use correct data when context option is setting', async t => {
+  const user = new UserModel({
+    userName: 'wayne',
+    hobbies: ['basketball', 'travelling']
+  })
+  await user.save()
+  const queryRes = await graphql(
+    schoolSchema,
+    `mutation add {
+      school: createSchool (
+        name: "aSchool"
+      ) {
+        id
+        principal {
+          id
+          userName
+        }
+      }
+    } `,
+    { rootValue: null },
+    { user: user }
+  )
+  const data = queryRes.data.school
+  t.is(data.principal.id, user.id)
+  t.is(data.principal.userName, user.userName)
+  await UserModel.findByIdAndRemove(user.id)
+  await SchoolModel.findByIdAndRemove(data.id)
+})
+
+test('should return error if context option not appear in the request context', async t => {
+  const queryRes = await graphql(
+    schoolSchema,
+    `mutation add {
+      school: createSchool (
+        name: "aSchool"
+      ) {
+        id
+        principal {
+          id
+          userName
+        }
+      }
+    } `,
+    { rootValue: null },
+    { context: null }
+  )
+  t.regex(queryRes.errors[0]['message'], /principal\D+required/)
+})
+
 test('should update a single document attribute when giving valid id', async t => {
   const queryRes = await graphql(
     userSchema,
@@ -166,7 +229,7 @@ test('should delete a document when giving valid id', async t => {
   t.is(queryRes.data.deleteUser.msg, null)
 })
 
-test('should response with success false when giving invalid id', async t => {
+test('should response with success false when giving invalid id for deleting', async t => {
   const queryRes = await graphql(
     userSchema,
     `mutation delete {

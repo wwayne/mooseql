@@ -37,29 +37,30 @@ export function modelsToTypes (models) {
     const originFileds = type._typeConfig.fields()
     const newTypeFileds = Object.entries(originFileds)
       .map(([path, pathValue]) => {
-        if (pathValue.ref) {
-          const ref = pathValue.ref
+        let newPathValue = Object.assign({}, pathValue)
+        if (newPathValue.ref) {
+          const ref = newPathValue.ref
           if (!_typeMap[ref]) throw TypeError(`${ref} is not a model`)
           const model = models.find(m => m.modelName === ref)
           const refModelType = _typeMap[ref]
-          if (pathValue.type instanceof GraphQLList) {
-            return {[path]: {
+          if (newPathValue.type instanceof GraphQLList) {
+            newPathValue = Object.assign({}, newPathValue, {
               type: new GraphQLList(refModelType),
               resolve: async (instance) => {
                 // TODO: args filter
                 return await model.find({ _id: { $in: instance[path] } })
               }
-            }}
+            })
           } else {
-            return {[path]: {
+            newPathValue = Object.assign({}, newPathValue, {
               type: refModelType,
               resolve: async (instance) => {
                 return await model.findById(instance[path])
               }
-            }}
+            })
           }
         }
-        return { [path]: pathValue }
+        return { [path]: newPathValue }
       })
       .reduce((typeField, path) => (Object.assign(typeField, path)), {})
 
@@ -73,16 +74,19 @@ export function modelsToTypes (models) {
 /* Convert a mongoose model to corresponding type */
 const toType = (model) => {
   const exceptPath = ['_id', '__v']
+  const inheritOpts = ['ref', 'context']
   const paths = model.schema.paths
   let fields = Object.keys(paths)
     .filter(path => exceptPath.indexOf(path) === -1)
     .map(path => {
       const attr = paths[path]
-      const field = { type: pathToType(attr) }
-      // Find out ref on mongoose model's path, use subPath's ref if path is an Array
-      if (attr.options.ref || (attr.instance === 'Array' && attr.caster.options.ref)) {
-        field.ref = attr.options.ref || attr.caster.options.ref
-      }
+      let field = { type: pathToType(attr) }
+      // Find out special opt on mongoose model's path, use subPath's opt if path is an Array
+      inheritOpts.forEach(opt => {
+        if (attr.options[opt] || (attr.instance === 'Array' && attr.caster.options[opt])) {
+          field[opt] = attr.options[opt] || attr.caster.options[opt]
+        }
+      })
       // Mark required path
       const required = attr.options.required
       if (Array.isArray(required) && required[0] || required) field.required = true

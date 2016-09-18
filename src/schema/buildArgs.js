@@ -14,7 +14,7 @@ import pluralize from 'pluralize'
 /**
  * Generate args based on type's fields
  * @parmas
- *  - tyoe {Object} built graphql type
+ *  - type {Object} built graphql type
  * @return
  *  - defaultArgs {Object} argus based on type's fields, including singular and plural
  * @notice
@@ -33,27 +33,27 @@ export default function (type) {
 
 const fieldToArg = (key, field) => {
   const typeName = field.type.name || field.type.constructor.name
-  const required = field.required
+  const { required, ref, context } = field
   let graphqlType
   if (typeName !== 'GraphQLList') {
     graphqlType = nameToType(typeName, field)
     // Custom type for Object attribute in mongoose model. e.g. {name: {first, last}}
     if (!graphqlType) return buildObjectArgs(key, field)
-    return buildArgs(key, graphqlType, required)
+    return buildArgs(key, graphqlType, { required, ref, context })
   } else {
     // Deal with List type
     graphqlType = nameToType(field.type.ofType.name, field)
-    return {[key]: { type: new GraphQLList(graphqlType), onlyPlural: true, required }}
+    return {[key]: { type: new GraphQLList(graphqlType), onlyPlural: true, required, ref, context }}
   }
 }
 
-const buildArgs = (key, graphqlType, required) => {
+const buildArgs = (key, graphqlType, { required, ref, context }) => {
   if (Object.keys(graphqlType).length === 0) return {}
   const plural = pluralize.plural(key)
   const isPlural = plural === key
   return isPlural
-    ? {[key]: { type: new GraphQLList(graphqlType), onlyPlural: true, required }}
-    : {[key]: { type: graphqlType, required }, [plural]: { type: new GraphQLList(graphqlType) }}
+    ? {[key]: { type: new GraphQLList(graphqlType), onlyPlural: true, required, ref, context }}
+    : {[key]: { type: graphqlType, required, ref, context }, [plural]: { type: new GraphQLList(graphqlType) }}
 }
 
 const nameToType = (typeName, field) => {

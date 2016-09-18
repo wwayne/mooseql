@@ -20,7 +20,7 @@ export function filterArgs (defaultArgs, opt) {
     .map(([arg, value]) => {
       let newValue = Object.assign({}, value)
       if ((arg === 'id' || arg === 'ids') && opt.idRequired) newValue = packValueToNonNull(newValue)
-      if (!opt.required && newValue.required) newValue = packValueToNonNull(newValue)
+      if (!opt.required && newValue.required && !newValue.context) newValue = packValueToNonNull(newValue)
       return [arg, newValue]
     })
     .reduce((args, [arg, value]) => {
@@ -48,4 +48,16 @@ export function toMongooseArgs (args) {
     }, args)
     return args
   }, {})
+}
+
+/**
+ * Giving an object and a string, pick out wanted data
+ * e.g. user { id: 'test' } and user.id => 'test'
+ */
+export function pickoutValue (target, str) {
+  const strDepth = str.split('.')
+  const newTarget = target[strDepth[0]]
+  if (newTarget === undefined) throw new Error('Cannot find the value')
+  if (strDepth.length === 1) return newTarget
+  return pickoutValue(newTarget, strDepth.splice(1).join('.'))
 }

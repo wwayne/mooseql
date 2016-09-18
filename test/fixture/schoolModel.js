@@ -9,6 +9,12 @@ import {
 /* Mongoose School model */
 const schoolSchema = new Schema({
   name: { type: String, required: 'name is required' },
+  principal: {
+    type: String,
+    ref: 'User',
+    required: true,
+    context: 'user.id'
+  },
   position: String,
   students: Number
 })
@@ -21,6 +27,7 @@ export const schoolType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString, required: true },
+    principal: { type: GraphQLID, ref: 'User', required: true, context: 'user.id' },
     position: { type: GraphQLString },
     students: { type: GraphQLFloat }
   })

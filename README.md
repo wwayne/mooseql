@@ -254,5 +254,49 @@ const mySchema = mooseql([UserModel, SchoolModel], {
 ```
 So it just pass `{ query: {Your custom queries}, mutation: {Your custom mutations} }` into `mooseql()` as the second argument. 
 
+## Advanced usage
+### Make use of context
+In practice, we store the session in req.session or logged in user data in req.user, and it is usually passed to graphql as context. In this situation, you just need to add an option `context` in your Mongoose schema. Let's using **express + express-graphql + password + express-session** for example.
+
+See you have a model named Article, the author is logged in user, so Mongoose schema may like the following:
+
+```js
+const articleSchema = new Schema({
+	title: String,
+	author: { 
+		type: Schema.Types.ObjectId,
+		required: true,
+		ref: 'User',
+		context: 'user.id'
+	}
+})
+```
+Since express-graphql will use `request` object as context if nothing set to context, and passport will set user object into `req.user`, express-session will use `req.session`. So your context is probably like 
+
+```js
+{ 
+	user: userObject,
+	session: sessionObject
+}
+```
+That's why you set `context: 'user.id'` in your Mongoose schema, because the path `author` only store an ObjectId, so it only cares about `user.id` instead of the completed user object.
+
+In this way, after user login, when you create an new article, you don't need to pass the autor as params even though it has been set to `required`, the author will be got from `req.user.id` automatically. The query string is like:
+
+```js
+`mutation create {
+ article: createArticle (
+ 	title: "How to use graphql"
+ ) {
+ 	id
+ 	title
+ 	author {
+ 		id
+ 		userName
+ 	}
+ }
+}`
+```
+
 ## License
 MIT
