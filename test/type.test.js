@@ -4,7 +4,7 @@ import { graphql, GraphQLObjectType, GraphQLSchema } from 'graphql'
 import mongoose from 'mongoose'
 
 import { UserModel, userType } from './fixture/userModel'
-import { SchoolModel } from './fixture/schoolModel'
+import { SchoolModel, schoolType } from './fixture/schoolModel'
 import { modelsToTypes } from '../src/type'
 
 let typeMap
@@ -16,9 +16,11 @@ test.before(async t => {
   typeMap = modelsToTypes([UserModel, SchoolModel])
   school = new SchoolModel({
     name: 'universary',
+    principal: 'wayne',
     position: 'sh',
     students: 100
   })
+  await school.save()
   user = new UserModel({
     name: {
       first: 'wang',
@@ -37,7 +39,7 @@ test.before(async t => {
     currentSchool: school.id,
     education: [school.id]
   })
-  await school.save()
+  await SchoolModel.findByIdAndUpdate(school.id, { principal: user.id })
 })
 
 test.after(async t => {
@@ -62,6 +64,13 @@ test('Mongoose model should be converted to graphql type correctly', t => {
   t.deepEqual(convertedUserFields.currentSchool.type.name, userFields.currentSchool.type.name)
   t.true(convertedUserFields.education.type instanceof GraphQLList)
   t.deepEqual(convertedUserFields.education.type.ofType.name, userFields.education.type.ofType.name)
+})
+
+test('Special params should be converted from model to type', t => {
+  const convertedSchoolFields = typeMap['School']._typeConfig.fields()
+  const schoolFields = schoolType._typeConfig.fields()
+  t.is(convertedSchoolFields.principal.required, schoolFields.principal.required)
+  t.is(convertedSchoolFields.principal.context, schoolFields.principal.context)
 })
 
 test('Mongoose model should be accessable to query after converting', async t => {

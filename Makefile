@@ -6,7 +6,7 @@ lint:
 	@echo Linting...
 	@$(NODE_BIN)/standard --verbose | $(NODE_BIN)/snazzy src/
 
-test: lint
+test:
 	@ echo Testing...
 	@$(NODE_BIN)/ava test/*.test.js --timeout=10s
 

@@ -4,7 +4,7 @@ import {
   GraphQLString
 } from 'graphql'
 import buildArgs from './buildArgs'
-import { filterArgs, toMongooseArgs } from '../utils'
+import { filterArgs, toMongooseArgs, pickoutValue } from '../utils'
 
 /**
  * Build mutation for single model
@@ -25,10 +25,22 @@ export default function (model, type) {
 }
 
 const buildCreate = (Model, type, defaultArgs) => {
+  const createArgs = filterArgs(defaultArgs, { id: true, plural: true })
+  const lazyRequiredCheck = Object.entries(createArgs).filter(([key, value]) => {
+    return value.required && value.context
+  })
   return {
     type,
-    args: filterArgs(defaultArgs, { id: true, plural: true }),
-    resolve: async (_, args) => {
+    args: createArgs,
+    resolve: async (root, args, context) => {
+      // Check if an arg is required and has context
+      // because it won't be marked as GraphqlNonNull
+      lazyRequiredCheck.forEach(([key, value]) => {
+        const ctx = value.context.split('.')[0]  // user.id -> user
+        if (context[ctx] === undefined) throw new Error(`${key} is required`)
+        args[key] = pickoutValue(context, value.context)
+      })
+
       const instance = new Model(toMongooseArgs(args))
       return await instance.save()
     }
@@ -49,6 +61,7 @@ const buildUpdate = (Model, type, defaultArgs) => {
           return [key.replace('_', '.'), value]
         })
         .reduce((args, [key, value]) => (Object.assign(args, {[key]: value})), {})
+
       await Model.update({ _id: args.id }, { $set: updateData })
       return await Model.findById(args.id)
     }
