@@ -26,21 +26,23 @@ export default function (model, type) {
 
 const buildCreate = (Model, type, defaultArgs) => {
   const createArgs = filterArgs(defaultArgs, { id: true, plural: true })
-  const lazyRequiredCheck = Object.entries(createArgs).filter(([key, value]) => {
-    return value.required && value.context
+  const contextArgs = Object.entries(createArgs).filter(([key, value]) => {
+    return value.context
   })
   return {
     type,
     args: createArgs,
     resolve: async (root, args, context) => {
-      // Check if an arg is required and has context
-      // because it won't be marked as GraphqlNonNull
-      lazyRequiredCheck.forEach(([key, value]) => {
-        const ctx = value.context.split('.')[0]  // user.id -> user
-        if (context[ctx] === undefined) throw new Error(`${key} is required`)
+      // Set up args that marked as context
+      contextArgs.forEach(([key, value]) => {
+        if (value.required) {
+          // Check if an arg is required and has context
+          // because it won't be marked as GraphqlNonNull in args
+          const ctx = value.context.split('.')[0]  // user.id -> user
+          if (context[ctx] === undefined) throw new Error(`${key} is required`)
+        }
         args[key] = pickoutValue(context, value.context)
       })
-
       const instance = new Model(toMongooseArgs(args))
       return await instance.save()
     }
