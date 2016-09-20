@@ -158,3 +158,7 @@ test('should response with errors when giving invalid params', async t => {
   const queryRes = await graphql(userSchema, `{ user(id: "true") { id } }`)
   t.not(queryRes.errors, undefined)
 })
+test('should return all instance when args not provided', async t => {
+  const queryRes = await graphql(userSchema, `{ user { id } }`)
+  t.is(queryRes.data.user.length, 2)
+})
