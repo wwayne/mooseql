@@ -61,7 +61,7 @@ post('/graphql')
        school: school.id
      ) {
       id,
-      name { 
+      name {
         first,
         last
       },
@@ -101,28 +101,29 @@ post('/graphql')
 #### You can query like this after using mooseql to generate the schema
 
 ```js
-`user (
+`{ user (
   	id: "${userInstance.id}"
-	name_first: "wayne",
-	userNames: ["wwayne01", "wwayne02"],
-	age: 1,
-	isBot: false,
-	birth: "${new Date(2016, 8, 15)}",
-	binary: "${new Buffer('wayne')}",
-	hobbies: ["basketball"],
-	currentSchool: "${schoolInstance.id}"
-	education: ["${schoolInstance.id}"]
- ) {
-   id
-   name {
-    first
-   }
-   currentSchool {
+  	name_first: "wayne",
+  	userNames: ["wwayne01", "wwayne02"],
+  	age: 1,
+  	isBot: false,
+  	birth: "${new Date(2016, 8, 15)}",
+  	binary: "${new Buffer('wayne')}",
+  	hobbies: ["basketball"],
+  	currentSchool: "${schoolInstance.id}"
+  	education: ["${schoolInstance.id}"]
+   ) {
      id
-     name
-   }
-   education {
-   	 id
+     name {
+      first
+     }
+     currentSchool {
+       id
+       name
+     }
+     education {
+     	 id
+     }
    }
  }`
 ```
@@ -252,7 +253,7 @@ const mySchema = mooseql([UserModel, SchoolModel], {
 })
 
 ```
-So it just pass `{ query: {Your custom queries}, mutation: {Your custom mutations} }` into `mooseql()` as the second argument. 
+So it just pass `{ query: {Your custom queries}, mutation: {Your custom mutations} }` into `mooseql()` as the second argument.
 
 ## Advanced usage
 ### Make use of context
@@ -263,7 +264,7 @@ See you have a model named Article, the author is logged in user, so Mongoose sc
 ```js
 const articleSchema = new Schema({
 	title: String,
-	author: { 
+	author: {
 		type: Schema.Types.ObjectId,
 		required: true,
 		ref: 'User',
@@ -271,10 +272,10 @@ const articleSchema = new Schema({
 	}
 })
 ```
-Since express-graphql will use `request` object as context if nothing set to context, and passport will set user object into `req.user`, express-session will use `req.session`. So your context is probably like 
+Since express-graphql will use `request` object as context if nothing set to context, and passport will set user object into `req.user`, express-session will use `req.session`. So your context is probably like
 
 ```js
-{ 
+{
 	user: userObject,
 	session: sessionObject
 }
