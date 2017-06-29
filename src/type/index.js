@@ -23,7 +23,7 @@ let _typeMap = {}
  * @return
  *  - typeMap {Object} key: modelName, value: type
  */
-export function modelsToTypes (models) {
+export function modelsToTypes(models) {
   let typeMap = models.filter(model => {
     if (_typeMap[model.modelName]) return false
     return true
@@ -83,7 +83,7 @@ const toType = (model) => {
       let field = { type: pathToType(attr) }
       // Find out special opt on mongoose model's path, use subPath's opt if path is an Array
       inheritOpts.forEach(opt => {
-        if (attr.options[opt] || (attr.instance === 'Array' && attr.caster.options[opt])) {
+        if (attr.options[opt] || (attr.instance === 'Array' && attr.caster.options && attr.caster.options[opt])) {
           field[opt] = attr.options[opt] || attr.caster.options[opt]
         }
       })
