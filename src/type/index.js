@@ -23,7 +23,7 @@ let _typeMap = {}
  * @return
  *  - typeMap {Object} key: modelName, value: type
  */
-export function modelsToTypes(models) {
+export function modelsToTypes (models) {
   let typeMap = models.filter(model => {
     if (_typeMap[model.modelName]) return false
     return true
