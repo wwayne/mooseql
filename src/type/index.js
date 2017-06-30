@@ -83,7 +83,7 @@ const toType = (model) => {
       let field = { type: pathToType(attr) }
       // Find out special opt on mongoose model's path, use subPath's opt if path is an Array
       inheritOpts.forEach(opt => {
-        if (attr.options[opt] || (attr.instance === 'Array' && attr.caster.options[opt])) {
+        if (attr.options[opt] || (attr.instance === 'Array' && attr.caster.options && attr.caster.options[opt])) {
           field[opt] = attr.options[opt] || attr.caster.options[opt]
         }
       })
